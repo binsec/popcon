@@ -1,0 +1,129 @@
+with -fpv, the nnf output is not guaranteed to be equivalent 
+to the original formula. When all projected variable have been set, 
+the remainding formula is only meant to be equisatifiable.
+
+Introduce -fpv2 that works like normal model counting, but decides
+the specified variables first.
+diff --git a/compilers/dDnnfCompiler.hh b/compilers/dDnnfCompiler.hh
+index 36a2d70..5ad3d33 100644
+--- a/compilers/dDnnfCompiler.hh
++++ b/compilers/dDnnfCompiler.hh
+@@ -56,6 +56,8 @@
+ using namespace boost::multiprecision;
+ using namespace std;
+ 
++extern vec<bool> *decideMeFirst;
++
+ 
+ struct onTheBranch
+ {
+@@ -123,6 +125,30 @@ template <class T> class DDnnfCompiler
+     return globalFalseNode;
+   }// manageUnsat
+ 
++  // returns true when all variables in decideMeFirst have been set
++  bool decidedPrio() {
++    for (int i=0; i<decideMeFirst->size(); i++) {
++      if ((*decideMeFirst)[i] && s.value(i) == l_Undef) {
++        return false;
++      }
++    }
++    return true;
++  }
++
++  // writes the intersection of setOfVar with decideMeFirst into out
++  void filterForPrio(vec<Var> &setOfVar, vec<Var> &out) {
++    if (decidedPrio()) {
++      setOfVar.copyTo(out);
++    } else {
++      out.clear();
++      for (int i = 0; i<setOfVar.size(); i++) {
++        if ((*decideMeFirst)[setOfVar[i]]) {
++          out.push(setOfVar[i]);
++        }
++      }
++    }
++  }
++
+   /**
+      Compile the CNF formula into a D-FPiBDD.
+ 
+@@ -283,8 +309,35 @@ template <class T> class DDnnfCompiler
+     }
+ 
+     Var v = var_Undef;
+-    if(priorityVar.size()) v = vs->selectVariable(priorityVar); else v = vs->selectVariable(connected);
+-    if(v == var_Undef) return createTrueNode(connected);
++    vec<Var> filtered;
++    vec<Var> filtered2;
++    filterForPrio(connected, filtered);
++    filterForPrio(priorityVar, filtered2);
++    if(priorityVar.size()) {
++      v = vs->selectVariable(filtered2);
++    } else {
++      v = vs->selectVariable(filtered);
++    }
++    if(v == var_Undef && !decidedPrio()) {
++      // no variable available in decideMeFirst, this means that the
++      // undecided ones are in other components, so we can decide the other
++      // ones now
++      v = vs->selectVariable(filtered);
++    }
++    if(v == var_Undef && !decidedPrio()) {
++      // no variable available in decideMeFirst, this means that the
++      // undecided ones are in other components, so we can decide the other
++      // ones now
++      if(priorityVar.size()) {
++        v = vs->selectVariable(priorityVar);
++      } else {
++        v = vs->selectVariable(connected);
++      }
++    }
++    /* std::cout << "select var " << (v+1)  << " with all decided: " << decidedPrio() << std::endl; */
++    if(v == var_Undef) {
++      return createTrueNode(connected);
++    }
+ 
+     Lit l = mkLit(v, optReversePolarity - vs->selectPhase(v));
+     nbDecisionNode++;
+diff --git a/core/Main.cc b/core/Main.cc
+index cc834c9..b07259a 100644
+--- a/core/Main.cc
++++ b/core/Main.cc
+@@ -59,6 +59,8 @@ using namespace std;
+ #include "../manager/BucketManager.hh"
+ #include "../manager/CacheCNFManager.hh"
+ 
++vec<bool> *decideMeFirst;
++
+ 
+ /**
+    Call a model counter.
+@@ -229,7 +231,8 @@ int main(int argc, char** argv)
+                 "File where the d-DNNF representation of the DAG should be output", "/dev/null");
+   StringOption dratOutput("MAIN", "drat", "File where the drat should be output", "/dev/null");
+ 
+-  StringOption fileP("MAIN", "fpv", "File where we can find the projected variable", "/dev/null");
++  StringOption fileP("MAIN", "fpvdontuseitsbroken", "I broke this option", "/dev/null");
++  StringOption filePrio("MAIN", "fpv2", "File where we can find the priority variable", "/dev/null");
+   StringOption optPreproc("MAIN", "preproc",
+                "Available preproc: backbone, vivification, occElimination (can be combine with +)", "");
+ 
+@@ -260,13 +263,17 @@ int main(int argc, char** argv)
+   // parse the input: CNF, weight of the literal and projected variables
+   vec<vec<Lit> > clauses;
+   vec<bool> isProjectedVar;
++  vec<bool> decideMeFirstBacking;
++  decideMeFirst = &decideMeFirstBacking;
+   vec<double> weightLit;
+ 
+   ParserProblem p;
+   int nbVar = p.parseProblem(argv[1], fileWeights, clauses, weightLit);
+   parseProjectedVariable(fileP, nbVar, isProjectedVar);
++  parseProjectedVariable(filePrio, nbVar, *decideMeFirst);
+ 
+   assert(isProjectedVar.size() >= nbVar);
++  assert(decideMeFirst->size() >= nbVar);
+ 
+   Preproc preproc;
+   bool state = preproc.run(clauses, nbVar, isProjectedVar, string(optPreproc));

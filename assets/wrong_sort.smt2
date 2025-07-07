@@ -1,0 +1,5 @@
+(set-logic QF_BV)
+(declare-fun thevar () (_ BitVec 8))
+(declare-fun thechoice () Bool)
+(set-info :controlled thechoice)
+(assert (bvult thevar (ite (= thechoice #b00) #x34 #x45)))

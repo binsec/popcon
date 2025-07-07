@@ -1,0 +1,30 @@
+diff --git a/maxcount.py b/maxcount.py
+index 4fdc772..ae08622 100644
+--- a/maxcount.py
++++ b/maxcount.py
+@@ -12,6 +12,25 @@ import pycryptosat
+ import time
+ import itertools
+ import argparse
++import subprocess
++import shlex
++import prctl
++import signal
++
++def suicide():
++    prctl.set_pdeathsig(signal.SIGKILL)
++
++def my_system(command):
++	args = shlex.split(command)
++	kwargs = {}
++	if args[-2] == ">":
++		output_file = args[-1]
++		args = args[:-2]
++		kwargs = { "stdout" : open(output_file, "wb") }
++	info = subprocess.run(args, preexec_fn=suicide, **kwargs)
++	return info.returncode
++
++os.system = my_system
+ 
+ ### parse command-line arguments
+ 

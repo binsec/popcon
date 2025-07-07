@@ -1,0 +1,5 @@
+(set-logic QF_BV)
+(declare-fun n () (_ BitVec 48))
+(declare-fun x () (_ BitVec 48))
+(set-info :controlled n)
+(assert (bvult x n))

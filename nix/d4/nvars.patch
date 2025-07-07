@@ -1,0 +1,14 @@
+diff --git a/core/Main.cc b/core/Main.cc
+index f9331f5..706e314 100644
+--- a/core/Main.cc
++++ b/core/Main.cc
+@@ -302,6 +302,9 @@ int main(int argc, char** argv)
+     {
+       ofstream *outFile = (strcmp((const char*)ddnnfOutput, "/dev/null") == 0) ? nullptr: &out;
+       ofstream *dratFile = (strcmp((const char*)dratOutput, "/dev/null") == 0) ? nullptr: &dratOut;
++      if (outFile) {
++        (*outFile) << "c nvars " << nbVar << std::endl;
++      }
+ 
+       if(isInteger) compileDDNNF<mpz_int>(clauses, weightLit, optList, outFile, isProjectedVar, query, dratFile);
+       else compileDDNNF<mpf_float>(clauses, weightLit, optList, outFile, isProjectedVar, query, dratFile);

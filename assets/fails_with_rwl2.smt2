@@ -1,0 +1,8 @@
+(set-logic QF_BV)
+(declare-fun var1 () (_ BitVec 1))
+(declare-fun var2 () (_ BitVec 1))
+(set-info :controlled var2)
+(define-fun x0 () (_ BitVec 1) var1)(define-fun node0 () Bool (bvule x0 (_ bv0 1)))
+(define-fun node2 () Bool false)
+(define-fun node1 () Bool (ite (= var2 (_ bv1 1)) node0 node2))
+(assert node1)

@@ -1,0 +1,134 @@
+{
+    "baxmc": {
+        "branch": "main",
+        "repo": "https://gricad-gitlab.univ-grenoble-alpes.fr/tava/baxmc.git",
+        "rev": "68a231aa76b50bf3fb9b57ce23a34e7ec235685d",
+        "type": "git"
+    },
+    "crate2nix": {
+        "branch": "master",
+        "description": "nix build file generator for rust crates",
+        "homepage": "",
+        "owner": "kolloch",
+        "repo": "crate2nix",
+        "rev": "86dd6068576a0d11f052cb210ac2d800ae345156",
+        "sha256": "0vm3hfn2l3qwsaigpqb4skc2spa1licxhcp30gwnvqn5y102skj2",
+        "type": "tarball",
+        "url": "https://github.com/kolloch/crate2nix/archive/86dd6068576a0d11f052cb210ac2d800ae345156.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "d4": {
+        "branch": "main",
+        "description": "d4 Model Counter",
+        "homepage": null,
+        "owner": "crillab",
+        "repo": "d4",
+        "rev": "d7544e4e2c89a148b444f02ee4e248b8c63193b3",
+        "sha256": "01dhdrh8rkb1bqji1y452659szddiq3vp0sqqf838wqy2h5fy5wd",
+        "type": "tarball",
+        "url": "https://github.com/crillab/d4/archive/d7544e4e2c89a148b444f02ee4e248b8c63193b3.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "dsharp": {
+        "branch": "master",
+        "description": null,
+        "homepage": null,
+        "owner": "qumulab",
+        "repo": "dsharp",
+        "rev": "230793465f478c6dd2d52e02ff4344fd31a98585",
+        "sha256": "16yiadkx4rrq1rckvqiind3320zc0npjazhxm8pnraxig6a7f74f",
+        "type": "tarball",
+        "url": "https://github.com/qumulab/dsharp/archive/230793465f478c6dd2d52e02ff4344fd31a98585.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "flake-compat": {
+        "branch": "master",
+        "description": null,
+        "homepage": null,
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "rev": "ff81ac966bb2cae68946d5ed5fc4994f96d0ffec",
+        "sha256": "19d2z6xsvpxm184m41qrpi1bplilwipgnzv9jy17fgw421785q1m",
+        "type": "tarball",
+        "url": "https://github.com/edolstra/flake-compat/archive/ff81ac966bb2cae68946d5ed5fc4994f96d0ffec.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "maxcount": {
+        "branch": "master",
+        "description": "An approximate Max#SAT solver.",
+        "homepage": null,
+        "owner": "dfremont",
+        "repo": "maxcount",
+        "rev": "703d88e87ab5afd1b9fe6099b582382e8b62f886",
+        "sha256": "04jw1z9g95dhfkwn3s7i9v807vvz6dnm84zqyc9yl3fiq1naszm0",
+        "type": "tarball",
+        "url": "https://github.com/dfremont/maxcount/archive/703d88e87ab5afd1b9fe6099b582382e8b62f886.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "new_nixpkgs": {
+        "branch": "nixos-25.05",
+        "description": "Nix Packages collection & NixOS",
+        "homepage": "",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "29e290002bfff26af1db6f64d070698019460302",
+        "sha256": "062g9k0dn0x6a7pcc4w17gkv7sd8gnbbsbr8cmihqdpsrs355gmp",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/29e290002bfff26af1db6f64d070698019460302.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "niv": {
+        "branch": "master",
+        "description": "Easy dependency management for Nix projects",
+        "homepage": "https://github.com/nmattia/niv",
+        "owner": "nmattia",
+        "repo": "niv",
+        "rev": "af958e8057f345ee1aca714c1247ef3ba1c15f5e",
+        "sha256": "1qjavxabbrsh73yck5dcq8jggvh3r2jkbr6b5nlz5d9yrqm9255n",
+        "type": "tarball",
+        "url": "https://github.com/nmattia/niv/archive/af958e8057f345ee1aca714c1247ef3ba1c15f5e.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs": {
+        "branch": "nixos-21.11",
+        "description": "Nix Packages collection",
+        "homepage": "",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "0a862f558d4001c62f15f652b1b907002dc1e9b9",
+        "sha256": "036hn615h0kws1ayis6xzylcm2zanbmkcq7dabxnyp1df06ci398",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/0a862f558d4001c62f15f652b1b907002dc1e9b9.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "pandas-stubs": {
+        "branch": "master",
+        "description": "Pandas type stubs. Helps you type-check your code.",
+        "homepage": "",
+        "owner": "VirtusLab",
+        "repo": "pandas-stubs",
+        "rev": "2f225556f6020088e0037b94ea5a730b1c1c073e",
+        "sha256": "1bmfwihrpqz8w5qik9mrpgc3vkimskkhj3cvyhj6fakh5qs2ixsf",
+        "type": "tarball",
+        "url": "https://github.com/VirtusLab/pandas-stubs/archive/2f225556f6020088e0037b94ea5a730b1c1c073e.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "pldi": {
+        "sha256": "0i1d58dp5whbxb698il99gdabby594am3acqc1rxx96q9mwiv660",
+        "type": "tarball",
+        "url": "https://zenodo.org/records/10953315/files/pldi_2024_artifacts.tar.gz",
+        "url_template": "https://zenodo.org/records/10953315/files/pldi_2024_artifacts.tar.gz"
+    },
+    "ssatABC": {
+        "branch": "master",
+        "description": "Stochastic SAT solver within ABC",
+        "homepage": "",
+        "owner": "NTU-ALComLab",
+        "repo": "ssatABC",
+        "rev": "2ff8e7436222695679e17a769d515143507cea44",
+        "sha256": "1b9qclxy31v8m0mcs3p127vzl1hvkaf5ci7ds5iw5ri4f6x7m8hw",
+        "type": "tarball",
+        "url": "https://github.com/NTU-ALComLab/ssatABC/archive/2ff8e7436222695679e17a769d515143507cea44.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    }
+}

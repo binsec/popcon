@@ -1,0 +1,27 @@
+diff --git a/src/ssat/core/ssatERSolve.cc b/src/ssat/core/ssatERSolve.cc
+index 3a847c2..435b9fd 100644
+--- a/src/ssat/core/ssatERSolve.cc
++++ b/src/ssat/core/ssatERSolve.cc
+@@ -81,12 +81,14 @@ void SsatSolver::erSolve2SSAT(Ssat_Params_t* pParams) {
+   int lenBeforeDrop = 0;
+   mpq_class subvalue;
+   bool sat;
++  long long iterations = 0;
+   abctime clk = 0, clk1 = Abc_Clock();
+   _erModel.capacity(_rootVars[0].size());
+   _erModel.clear();
+   printf("[INFO] Starting analysis ...\n");
+   // main loop, pseudo code line04-14
+   while (true) {
++    iterations++;
+     if (_fTimer) clk = Abc_Clock();
+     sat = _s2->solve();
+     if (_fTimer) {
+@@ -178,6 +180,7 @@ void SsatSolver::erSolve2SSAT(Ssat_Params_t* pParams) {
+       }
+     }
+   }
++  printf(" > main loop iterations = %lld\n", iterations);
+ }
+ 
+ void SsatSolver::checkERParams(Ssat_Params_t* pParams) {

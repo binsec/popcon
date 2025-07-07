@@ -1,0 +1,251 @@
+diff --git a/compilers/dDnnfCompiler.hh b/compilers/dDnnfCompiler.hh
+index 36a2d70..fc01348 100644
+--- a/compilers/dDnnfCompiler.hh
++++ b/compilers/dDnnfCompiler.hh
+@@ -56,6 +56,8 @@
+ using namespace boost::multiprecision;
+ using namespace std;
+ 
++extern vec<bool> *decideMeFirst;
++
+ 
+ struct onTheBranch
+ {
+@@ -94,6 +96,7 @@ template <class T> class DDnnfCompiler
+   bool optDomConst;
+   bool optReversePolarity;
+   bool isCertified;
++  int relax;
+ 
+   VariableHeuristicInterface *vs;
+   BucketManager<DAG<T> *> *bm;
+@@ -123,6 +126,30 @@ template <class T> class DDnnfCompiler
+     return globalFalseNode;
+   }// manageUnsat
+ 
++  // returns true when all variables in decideMeFirst have been set
++  bool decidedPrio() {
++    for (int i=0; i<decideMeFirst->size(); i++) {
++      if ((*decideMeFirst)[i] && s.value(i) == l_Undef) {
++        return false;
++      }
++    }
++    return true;
++  }
++
++  // writes the intersection of setOfVar with decideMeFirst into out
++  void filterForPrio(vec<Var> &setOfVar, vec<Var> &out) {
++    if (decidedPrio()) {
++      setOfVar.copyTo(out);
++    } else {
++      out.clear();
++      for (int i = 0; i<setOfVar.size(); i++) {
++        if ((*decideMeFirst)[setOfVar[i]]) {
++          out.push(setOfVar[i]);
++        }
++      }
++    }
++  }
++
+   /**
+      Compile the CNF formula into a D-FPiBDD.
+ 
+@@ -283,8 +310,71 @@ template <class T> class DDnnfCompiler
+     }
+ 
+     Var v = var_Undef;
+-    if(priorityVar.size()) v = vs->selectVariable(priorityVar); else v = vs->selectVariable(connected);
+-    if(v == var_Undef) return createTrueNode(connected);
++    static int blasted = 0;
++    // stop blasting after the first uncontrolled decision
++    static int uncontrolled_decision = false;
++    if (!uncontrolled_decision && blasted < relax) {
++      Var v_natural = var_Undef;
++      if(priorityVar.size()) {
++        v_natural = vs->selectVariable(priorityVar);
++      } else {
++        v_natural = vs->selectVariable(connected);
++      }
++      if (!decidedPrio() && v_natural != var_Undef && !(*decideMeFirst)[v_natural]) {
++        blasted++;
++        std::cout << "BLAST #" << blasted << "/" << relax << ": " << (v_natural+1) << std::endl;
++        (*decideMeFirst)[v_natural] = true;
++      };
++    }
++    vec<Var> filtered;
++    vec<Var> filtered2;
++    filterForPrio(connected, filtered);
++    filterForPrio(priorityVar, filtered2);
++    if(priorityVar.size()) {
++      v = vs->selectVariable(filtered2);
++    } else {
++      v = vs->selectVariable(filtered);
++    }
++    if(v == var_Undef && !decidedPrio()) {
++      // no variable available in decideMeFirst, this means that the
++      // undecided ones are in other components, so we can decide the other
++      // ones now
++      v = vs->selectVariable(filtered);
++    }
++    if(v == var_Undef && !decidedPrio()) {
++      // no variable available in decideMeFirst, this means that the
++      // undecided ones are in other components, so we can decide the other
++      // ones now
++      if(priorityVar.size()) {
++        v = vs->selectVariable(priorityVar);
++      } else {
++        v = vs->selectVariable(connected);
++      }
++    }
++    /* std::cout << "select var " << (v+1)  << " with all decided: " << decidedPrio() << std::endl; */
++    if(v == var_Undef) {
++      return createTrueNode(connected);
++    } else {
++      if (!(*decideMeFirst)[v]) {
++        uncontrolled_decision = true;
++      }
++    }
++    /* static int nblasted = 0; */
++    /* if (nblasted < 10) { */
++    /*   int nundecided = 0; */
++    /*   int bad; */
++    /*   for (int i=0; i<decideMeFirst->size(); i++) { */
++    /*     if ((*decideMeFirst)[i] && s.value(i) == l_Undef) { */
++    /*       nundecided++; */
++    /*       bad = i; */
++    /*     } */
++    /*   } */
++    /*   if (nundecided && nundecided < 10) { */
++    /*     nblasted++; */
++    /*     (*decideMeFirst)[bad] = false; */
++    /*   } */
++    /* } */
++
+ 
+     Lit l = mkLit(v, optReversePolarity - vs->selectPhase(v));
+     nbDecisionNode++;
+@@ -420,6 +510,7 @@ template <class T> class DDnnfCompiler
+       optCached = optList.optCache;
+       optDecomposableAndNode = optList.optDecomposableAndNode;
+       optReversePolarity = optList.reversePolarity;
++      relax = optList.relax;
+       optList.printOptions();
+ 
+       // initialized the data structure
+diff --git a/core/Main.cc b/core/Main.cc
+index cc834c9..706e314 100644
+--- a/core/Main.cc
++++ b/core/Main.cc
+@@ -59,6 +59,8 @@ using namespace std;
+ #include "../manager/BucketManager.hh"
+ #include "../manager/CacheCNFManager.hh"
+ 
++vec<bool> *decideMeFirst;
++
+ 
+ /**
+    Call a model counter.
+@@ -229,7 +231,8 @@ int main(int argc, char** argv)
+                 "File where the d-DNNF representation of the DAG should be output", "/dev/null");
+   StringOption dratOutput("MAIN", "drat", "File where the drat should be output", "/dev/null");
+ 
+-  StringOption fileP("MAIN", "fpv", "File where we can find the projected variable", "/dev/null");
++  StringOption fileP("MAIN", "fpvdontuseitsbroken", "I broke this option", "/dev/null");
++  StringOption filePrio("MAIN", "fpv2", "File where we can find the priority variable", "/dev/null");
+   StringOption optPreproc("MAIN", "preproc",
+                "Available preproc: backbone, vivification, occElimination (can be combine with +)", "");
+ 
+@@ -243,6 +246,8 @@ int main(int argc, char** argv)
+                18, IntRange(0, 31));
+   IntOption strategyRedCache("MAIN", "strategy-reduce-cache",
+                "Set the strategy for the aging about the cache entries (0 = dec, 1 = div)\n", 0, IntRange(0,2));
++  IntOption relax("MAIN", "relax",
++               "how many variables to add to controlled set as relaxation", 0, IntRange(0,1000));
+ 
+ 
+   parseOptions(argc, argv, true);
+@@ -253,20 +258,25 @@ int main(int argc, char** argv)
+   ofstream dratOut{dratOutput};
+   if (!dratOut.is_open()) printf("c WARNING! Could not write output drat file %s?\n", (const char *) dratOutput);
+ 
++  std::cout << "relax = " << relax << std::endl;
+   OptionManager optList(optCache, optAnd, rPolarity, reducePrimalGraph, equivSimp, cacheStore, varHeuristic,
+                         phaseHeuristic, partitionHeuristic, cacheRepresentation, reduceCache,
+-                        strategyRedCache, freqLimitDyn);
++                        strategyRedCache, freqLimitDyn, relax);
+ 
+   // parse the input: CNF, weight of the literal and projected variables
+   vec<vec<Lit> > clauses;
+   vec<bool> isProjectedVar;
++  vec<bool> decideMeFirstBacking;
++  decideMeFirst = &decideMeFirstBacking;
+   vec<double> weightLit;
+ 
+   ParserProblem p;
+   int nbVar = p.parseProblem(argv[1], fileWeights, clauses, weightLit);
+   parseProjectedVariable(fileP, nbVar, isProjectedVar);
++  parseProjectedVariable(filePrio, nbVar, *decideMeFirst);
+ 
+   assert(isProjectedVar.size() >= nbVar);
++  assert(decideMeFirst->size() >= nbVar);
+ 
+   Preproc preproc;
+   bool state = preproc.run(clauses, nbVar, isProjectedVar, string(optPreproc));
+@@ -292,10 +302,22 @@ int main(int argc, char** argv)
+     {
+       ofstream *outFile = (strcmp((const char*)ddnnfOutput, "/dev/null") == 0) ? nullptr: &out;
+       ofstream *dratFile = (strcmp((const char*)dratOutput, "/dev/null") == 0) ? nullptr: &dratOut;
++      if (outFile) {
++        (*outFile) << "c nvars " << nbVar << std::endl;
++      }
+ 
+       if(isInteger) compileDDNNF<mpz_int>(clauses, weightLit, optList, outFile, isProjectedVar, query, dratFile);
+       else compileDDNNF<mpf_float>(clauses, weightLit, optList, outFile, isProjectedVar, query, dratFile);
+ 
++      if (outFile && filePrio != "/dev/null") {
++        *outFile << "c controlled";
++        for (int i = 0; i < (*decideMeFirst).size(); i++) {
++          if ((*decideMeFirst)[i]) {
++            *outFile << " " << i+1;
++          }
++        }
++        *outFile << " 0\n";
++      }
+       if (dratFile) dratFile->close();
+       if(outFile) outFile->close();
+     }
+diff --git a/manager/OptionManager.hh b/manager/OptionManager.hh
+index 2e453f8..a2e2524 100644
+--- a/manager/OptionManager.hh
++++ b/manager/OptionManager.hh
+@@ -33,6 +33,7 @@ public:
+ 
+   int freqLimitDyn;
+   int reduceCache, strategyRedCache;
++  int relax;
+ 
+   const char *cacheStore;
+   const char *varHeuristic;
+@@ -43,7 +44,7 @@ public:
+   OptionManager(int _optCache, bool _optAnd, bool _reversePolarity, bool _reducePrimalGraph,
+                 bool _equivSimplification, const char *_cacheStore, const char *_varHeuristic,
+                 const char *_phaseHeuristic, const char *_partitionHeuristic,
+-                const char *_cacheRepresentation, int rdCache, int strCache, int frqLimit)
++                const char *_cacheRepresentation, int rdCache, int strCache, int frqLimit, int _relax)
+   {
+     freqLimitDyn = frqLimit;
+     strategyRedCache = strCache;
+@@ -59,11 +60,13 @@ public:
+     phaseHeuristic = _phaseHeuristic;
+     partitionHeuristic = _partitionHeuristic;
+     cacheStore = _cacheStore;
++    relax = _relax;
+   }// constructor
+ 
+   inline void printOptions()
+   {
+     printf("c\nc \033[1m\033[32mOption list \033[0m\n");
++    printf("c Relaxed variabls: %d\n", relax);
+     printf("c Caching: %d\n", optCache);
+     printf("c Reduce cache procedure level: %d\n", reduceCache);
+     printf("c Strategy for Reducing the cache: %d\n", strategyRedCache);
